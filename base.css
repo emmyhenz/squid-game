@@ -2,6 +2,120 @@ body, html {
     margin:0;
     overflow:hidden;
     position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+}
+
+canvas {
+    display: block;
+    width: 100vw !important;
+    height: 100vh !important;
+}
+
+/* ---------- Mobile on-screen controls ---------- */
+#mobile-controls {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+}
+
+#mobile-controls.visible {
+    display: block;
+}
+
+#joystick {
+    position: absolute;
+    left: max(24px, env(safe-area-inset-left));
+    bottom: max(28px, env(safe-area-inset-bottom));
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    touch-action: none;
+    pointer-events: auto;
+}
+
+#joystick-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 58px;
+    height: 58px;
+    margin-left: -29px;
+    margin-top: -29px;
+    border-radius: 50%;
+    background: rgba(230, 30, 77, 0.85);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    transition: transform 0.05s linear;
+    pointer-events: none;
+}
+
+#run-btn {
+    position: absolute;
+    right: max(28px, env(safe-area-inset-right));
+    bottom: max(40px, env(safe-area-inset-bottom));
+    width: 92px;
+    height: 92px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    background: rgba(230, 30, 77, 0.55);
+    color: #fff;
+    font-family: Lato, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    touch-action: none;
+    pointer-events: auto;
+    outline: none;
+}
+
+#run-btn.active {
+    background: rgba(230, 30, 77, 0.95);
+    transform: scale(0.94);
+}
+
+/* ---------- Rotate-to-landscape overlay ---------- */
+#rotate-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #000;
+    color: #fff;
+    font-family: Lato, Arial, sans-serif;
+    font-size: 20px;
+    padding: 0 24px;
+}
+
+#rotate-overlay .rotate-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    animation: rotate-hint 1.6s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+}
+
+/* Only nudge to landscape on touch-capable phones held in portrait. */
+@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+    #rotate-overlay {
+        display: flex;
+    }
 }
 
 .timer {

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <title>Squid game</title>
-    <meta name="viewport" content="width=device-width; user-scalable=no; minimum-scale=1.0; maximum-scale=1.0; initial-scale=1; viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0, viewport-fit=cover">
     <link rel="stylesheet" type="text/css" href="base.css">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/apple-icon-180.png">
@@ -55,6 +55,20 @@
     <div class="timer">
       <img alt="" src="./static/resources/timer.jpg">
       <span id="countdowntimer" class="countdowntimer"></span>
+    </div>
+
+    <!-- On-screen touch controls (shown on touch devices during play) -->
+    <div id="mobile-controls">
+      <div id="joystick">
+        <div id="joystick-thumb"></div>
+      </div>
+      <button id="run-btn" type="button">RUN</button>
+    </div>
+
+    <!-- Prompt to rotate the phone to landscape when held in portrait -->
+    <div id="rotate-overlay">
+      <div class="rotate-icon">📱</div>
+      <p>Please rotate your device to landscape to play.</p>
     </div>
   </body>
 </html>

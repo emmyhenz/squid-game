@@ -15,8 +15,18 @@ import { getRandomBehavior } from './behaviors';
 import { soundManager } from './soundManager';
 
 import { firebaseConfig } from '../firebaseConfig';
+import { MobileControls } from './mobileControls';
 
-const app = initializeApp(firebaseConfig);
+// Firebase is optional. With placeholder credentials (or none) the game must
+// still run, so initialization failures are swallowed instead of crashing.
+try {
+  if (firebaseConfig && !String(firebaseConfig.apiKey).includes('PLACEHOLDER')) {
+    initializeApp(firebaseConfig);
+  }
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.warn('Firebase initialization skipped:', err);
+}
 
 const ANIMATION_DEAD_ARRAY = 'dead_array';
 
@@ -28,7 +38,8 @@ class SquidGame {
   init() {
     THREE.Cache.enabled = true;
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    // Cap the pixel ratio so high-density mobile screens don't tank the frame rate.
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.aspect = window.innerWidth / window.innerHeight;
@@ -104,12 +115,41 @@ class SquidGame {
 
   startGame() {
     this.controls.connect(this.renderer);
+    this.mobileControls = new MobileControls(this.controls);
+    this.goFullscreenLandscape();
     this.startTimer();
     this.entityManager.entities
       .filter((entity) => entity instanceof NpcPlayer)
       .forEach((entity) => {
         entity.behavior.activate();
       });
+  }
+
+  // Request fullscreen and lock to landscape on devices that support it.
+  // Both APIs require a user gesture (the Play button), which is why this runs
+  // from startGame. Failures are ignored — desktop and iOS Safari simply skip.
+  goFullscreenLandscape() {
+    const el = document.documentElement;
+    const requestFs = el.requestFullscreen
+      || el.webkitRequestFullscreen
+      || el.mozRequestFullScreen;
+
+    const lockOrientation = () => {
+      if (window.screen && window.screen.orientation && window.screen.orientation.lock) {
+        window.screen.orientation.lock('landscape').catch(() => {});
+      }
+    };
+
+    if (requestFs) {
+      const result = requestFs.call(el);
+      if (result && typeof result.then === 'function') {
+        result.then(lockOrientation).catch(lockOrientation);
+      } else {
+        lockOrientation();
+      }
+    } else {
+      lockOrientation();
+    }
   }
 
   startTimer() {
