@@ -37,6 +37,24 @@ class SquidGame {
 
   init() {
     THREE.Cache.enabled = true;
+
+    // Fewer crowd characters on phones so weak devices don't freeze while the
+    // 3D models are cloned during loading.
+    this.isMobile = window.matchMedia('(pointer: coarse)').matches;
+    this.npcCount = this.isMobile ? 35 : 100;
+
+    // Surface loading progress on the spinner screen and never let a single
+    // failed/slow asset leave the player staring at a frozen spinner.
+    this.loadingFailed = false;
+    THREE.DefaultLoadingManager.onProgress = (url, loaded, total) => {
+      const percent = total ? Math.round((loaded / total) * 100) : 0;
+      this.setLoadingProgress(percent);
+    };
+    THREE.DefaultLoadingManager.onError = (url) => {
+      // eslint-disable-next-line no-console
+      console.warn('Failed to load asset:', url);
+    };
+
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     // Cap the pixel ratio so high-density mobile screens don't tank the frame rate.
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -71,8 +89,9 @@ class SquidGame {
     light.updateMatrix();
     light.castShadow = true;
     light.shadow.bias = -0.001;
-    light.shadow.mapSize.width = 4096;
-    light.shadow.mapSize.height = 4096;
+    const shadowSize = this.isMobile ? 1024 : 4096;
+    light.shadow.mapSize.width = shadowSize;
+    light.shadow.mapSize.height = shadowSize;
     light.shadow.camera.near = 0.1;
     light.shadow.camera.far = 1000.0;
     light.shadow.camera.left = 100;
@@ -198,16 +217,21 @@ class SquidGame {
   }
 
   async loadModels() {
-    await this.addPlayer();
-    await Promise.all([
-      this.addWalls(),
-      this.addTree(),
-      this.addSoldier(3, 0, -50),
-      this.addSoldier(-3, 0, -50),
-      this.addDoll(),
-      this.addNpcPlayers(),
-      soundManager.loadSounds(),
-    ]);
+    try {
+      await this.addPlayer();
+      await Promise.all([
+        this.addWalls(),
+        this.addTree(),
+        this.addSoldier(3, 0, -50),
+        this.addSoldier(-3, 0, -50),
+        this.addDoll(),
+        this.addNpcPlayers(),
+        soundManager.loadSounds(),
+      ]);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Some assets failed to load, starting anyway:', err);
+    }
     this.onFinishedLoading();
   }
 
@@ -222,7 +246,7 @@ class SquidGame {
   }
 
   loadDollModel() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let renderComponent;
       let mixer;
       let animations;
@@ -247,13 +271,13 @@ class SquidGame {
         mixer = new THREE.AnimationMixer(fbx);
         animations = new Map();
         resolve({ mixer, animations, renderComponent });
-      });
+      }, undefined, reject);
     });
   }
 
   async addNpcPlayers() {
     const promises = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < this.npcCount; i++) {
       promises.push(this.addNpcPlayer());
     }
     return Promise.all(promises);
@@ -301,7 +325,7 @@ class SquidGame {
   }
 
   async loadSoldierModel() {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let renderComponent;
       let mixer;
       let animations;
@@ -342,7 +366,7 @@ class SquidGame {
         animationLoader.load('Idle.fbx', (animation) => {
           onLoad(PLAYER_STATES.IDLE, animation);
         });
-      });
+      }, undefined, reject);
     });
   }
 
@@ -365,7 +389,7 @@ class SquidGame {
   loadPlayerModel() {
     this.animationClips = new Map();
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let renderComponent;
       let mixer;
       let animations;
@@ -439,7 +463,7 @@ class SquidGame {
         animLoader.load('Dance.fbx', (animation) => {
           onLoad(PLAYER_STATES.DANCE, animation);
         });
-      });
+      }, undefined, reject);
     });
   }
 
@@ -514,11 +538,18 @@ class SquidGame {
         });
         this.scene.add(fbx);
         resolve();
-      });
+      }, undefined, () => resolve()); // tree is decorative — don't block on failure
     });
   }
 
+  setLoadingProgress(percent) {
+    const el = document.getElementById('loading-progress');
+    if (el) el.textContent = `${percent}%`;
+  }
+
   onFinishedLoading() {
+    if (this.finishedLoading) return;
+    this.finishedLoading = true;
     const loadingScreen = document.getElementById('loading-screen');
     loadingScreen.classList.add('fade-out');
     loadingScreen.addEventListener('transitionend', this.onTransitionEnd);

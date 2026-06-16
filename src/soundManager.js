@@ -23,10 +23,21 @@ class SoundManager {
     return new Promise((resolve) => {
       const sound = new THREE.Audio(this.audioListener);
       const loader = new THREE.AudioLoader();
-      loader.load(url, (audioBuffer) => {
-        sound.setBuffer(audioBuffer);
-        resolve(sound);
-      });
+      loader.load(
+        url,
+        (audioBuffer) => {
+          sound.setBuffer(audioBuffer);
+          resolve(sound);
+        },
+        undefined,
+        () => {
+          // Audio is non-critical; resolve with a silent stub so a failed or
+          // slow sound download never blocks the loading screen.
+          sound.play = () => {};
+          sound.stop = () => {};
+          resolve(sound);
+        },
+      );
     });
   }
 }

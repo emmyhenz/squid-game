@@ -169,15 +169,28 @@ canvas {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0,0,0,0.7);
+    background:
+        radial-gradient(circle at 50% 35%, rgba(230, 30, 77, 0.35), rgba(0, 0, 0, 0.9) 70%),
+        #050308;
     color: #ffffff;
-    font-size: 40;
+    font-size: 40px;
     z-index: 999;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
 }
 
 #intro img {
-    width: 30%;
+    width: 38%;
+    max-width: 360px;
     height: auto;
+    filter: drop-shadow(0 6px 24px rgba(230, 30, 77, 0.6));
+}
+
+@media (orientation: landscape) and (pointer: coarse) {
+    #intro img {
+        width: 24%;
+    }
 }
 
 #start {
@@ -205,12 +218,31 @@ canvas {
     height: 100%;
     width: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     background-color: #000000;
     z-index: 1000;
     opacity: 1;
     transition: 0.5s opacity;
+}
+
+.loading-progress {
+    margin-top: 28px;
+    color: #ff2e6a;
+    font-family: Lato, Arial, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.loading-label {
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: Lato, Arial, sans-serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
 
 #loading-screen.fade-out {
